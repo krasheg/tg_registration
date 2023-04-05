@@ -1,5 +1,6 @@
 # TG Registration
-TG Registration is a Telegram bot that allows users to register for events or courses. It is built using the Telegram Bot API and Python programming language.
+TG Registration is a Telegram bot that allows users to register users and show info about his telegram profile. It is built using the Aiogram and Python programming language.
+
 
 ## Features
 User registration
