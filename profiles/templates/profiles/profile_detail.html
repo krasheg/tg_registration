@@ -1,0 +1,48 @@
+{% extends 'base.html' %}
+
+{% block body_block %}
+
+    {% if profile %}
+        <div class="profile-container">
+
+
+            <img src="{{ profile.photo.url }}" onerror="this.onerror=null;this.src='/media/base.png';" alt="user_photo" class="profile-photo" >
+            <div class="profile-description">
+                        <h1>Your profile details</h1>
+                <br>
+                <h2>username: <i class="bi bi-at"></i>  {{ profile.username }}</h2>
+                <h2>first name: {{ profile.first_name }}</h2>
+                <h2>last name: {{ profile.last_name }}</h2>
+                <p>registered: <i class="bi bi-calendar3"></i> {{ profile.user.date_joined }}</p>
+                <p>last login: <i class="bi bi-alarm-fill"></i> {{ profile.user.last_login }}</p>
+            </div>
+        </div>
+
+
+    {% else %}
+        <p>No data yet</p>
+    {% endif %}
+<style>
+    .profile-container {
+        width: 100%;
+        padding: 20px;
+        padding-left: 50px;
+    }
+
+    .profile-photo {
+        float: left;
+        width: 350px;
+        height: 350px;
+        margin-right: 20px;
+    }
+
+    .profile-description {
+        float: right;
+        width: calc(100% - 370px);
+        font-size: 20px;
+    }
+</style>
+{% endblock %}
+
+
+
