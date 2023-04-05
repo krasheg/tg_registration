@@ -3,6 +3,7 @@ import os
 import django
 
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "tg_registration.settings")
+
 if not settings.configured:
     django.setup()
 
@@ -11,7 +12,8 @@ from aiogram.contrib.fsm_storage.memory import MemoryStorage
 from aiogram.dispatcher.filters import CommandStart
 from aiogram.dispatcher import FSMContext
 from aiogram.dispatcher.filters.state import State, StatesGroup
-from aiogram.dispatcher.filters import Command
+from aiogram.dispatcher.filters import Command, Text
+from aiogram.types import ReplyKeyboardMarkup, KeyboardButton
 from django.contrib.auth.models import User
 from profiles.models import Profile
 from django.db import transaction
@@ -26,19 +28,42 @@ class RegisterState(StatesGroup):
     waiting_for_confirmation = State()
 
 
-bot = Bot(token=settings.TOKEN, parse_mode=types.ParseMode.HTML)
+bot = Bot(token=settings.TOKEN, parse_mode=types.ParseMode.HTML, proxy="http://proxy.server:3128")
 storage = MemoryStorage()
 dp = Dispatcher(bot, storage=storage)
+
+start_keyboard = ReplyKeyboardMarkup(resize_keyboard=True, one_time_keyboard=True).add(
+    KeyboardButton('Start Registration'))
 
 
 @dp.message_handler(CommandStart())
 async def start(message: types.Message):
-    await message.reply("Hello! type /register for registration on site.")
+    await message.answer(f'Hello {message.from_user.first_name}.\n'
+                         'This is a registration bot.\n'
+                         'Press the button to register',
+                         reply_markup=start_keyboard)
 
 
-@dp.message_handler(Command('register'))
-async def register(message: types.Message):
-    await bot.send_message(chat_id=message.chat.id, text="Enter username:")
+cancel_keyboard = ReplyKeyboardMarkup(resize_keyboard=True, one_time_keyboard=True).add(
+    KeyboardButton('Cancel register'))
+
+
+@dp.message_handler(Text(equals='Cancel register', ignore_case=True),
+                    state=[RegisterState.waiting_for_username, RegisterState.waiting_for_email,
+                           RegisterState.waiting_for_password, RegisterState.waiting_for_profile,
+                           RegisterState.waiting_for_confirmation])
+async def cancel_register(message: types.Message, state: FSMContext):
+    await state.finish()
+    await message.answer('Registration canceled successfully', reply_markup=start_keyboard)
+
+
+register_keyboard = ReplyKeyboardMarkup(resize_keyboard=True, one_time_keyboard=True).add(
+    KeyboardButton('Cancel register'))
+
+
+@dp.message_handler(Text(equals='Start Registration', ignore_case=True))
+async def register_command(message: types.Message):
+    await message.answer('Enter username:', reply_markup=register_keyboard)
     await RegisterState.waiting_for_username.set()
 
 
@@ -47,7 +72,7 @@ async def process_username(message: types.Message, state: FSMContext):
     username = message.text
     await state.update_data(username=username)
 
-    await bot.send_message(chat_id=message.chat.id, text="Enter email:")
+    await bot.send_message(chat_id=message.chat.id, text="Enter email:", reply_markup=cancel_keyboard)
     await RegisterState.waiting_for_email.set()
 
 
@@ -56,11 +81,11 @@ async def process_email(message: types.Message, state: FSMContext):
     email = message.text
     await state.update_data(email=email)
 
-    await bot.send_message(chat_id=message.chat.id, text="Enter password:")
+    await bot.send_message(chat_id=message.chat.id, text="Enter password:", reply_markup=cancel_keyboard)
     await RegisterState.waiting_for_password.set()
 
 
-@dp.message_handler(state=RegisterState.waiting_for_password)
+@dp.message_handler(state=RegisterState.waiting_for_password, )
 async def process_password(message: types.Message, state: FSMContext):
     password = message.text
     await state.update_data(password=password)
@@ -75,13 +100,13 @@ async def process_password(message: types.Message, state: FSMContext):
 
     user = message.from_user
 
-    # Отримуємо профіль користувача
+
     profile_photos = await bot.get_user_profile_photos(user_id=user.id, limit=1)
 
-    # Отримуємо фотографію профілю користувача
+
     photo_id = profile_photos.photos[0][-1].file_id
 
-    # Зберігаємо фотографію в media root
+
 
     file = await bot.get_file(photo_id)
     file_path = file.file_path
@@ -90,13 +115,14 @@ async def process_password(message: types.Message, state: FSMContext):
     with open(os.path.join(settings.MEDIA_ROOT, file_name), 'wb') as new_file:
         new_file.write(downloaded_file.getvalue())
 
-    # Зберігаємо дані користувача в базу даних
+
     await sync_to_async(create_profile)(user, new_user, file_name)
-
-    await bot.send_message(chat_id=message.chat.id, text="Congratulations! You`ve successfully registered!")
-
     # starting state
     await state.finish()
+
+    await bot.send_message(chat_id=message.chat.id,
+                           text="Congratulations! You`ve successfully registered! Please, go to http://krasheg.pythonanywhere.com/ and log in with your new account!",
+                           reply_markup=start_keyboard)
 
 
 # Creating user`s function
@@ -123,4 +149,4 @@ def create_profile(user, new_user, file_name):
 
 if __name__ == '__main__':
     # Run bot
-    executor.start_polling(dp, skip_updates=True)
+    executor.start_polling(dp, reset_webhook=True, skip_updates=True)

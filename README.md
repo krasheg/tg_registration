@@ -1,0 +1,30 @@
+# TG Registration
+TG Registration is a Telegram bot that allows users to register for events or courses. It is built using the Telegram Bot API and Python programming language.
+
+## Features
+User registration
+Event or course selection
+Confirmation message with details
+Ability to view all registered users and their selected events/courses
+Admin panel to manage registered users and events/courses
+## Getting Started
+### Prerequisites
+To run this bot, you will need to have the following:
+
+- A Telegram account
+- A Telegram bot token (you can get it from BotFather)
+
+- Python 3.6 or higher installed on your machine
+
+### Installation and Usage
+Clone the repository:
+
+`git clone https://github.com/krasheg/tg_registration.git`
+
+Create `.env` file and write there your `TOKEN='token for telegram bot'` and `SECRET_KEY='your key for django'`
+
+Run the `bot.py` file using the following command:
+
+`python profiles/bot.py`
+
+Open your Telegram app and search for your bot. Start a conversation with it and you will be able to register.
