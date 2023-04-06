@@ -4,10 +4,9 @@ TG Registration is a Telegram bot that allows users to register users and show i
 
 ## Features
 User registration
-Event or course selection
 Confirmation message with details
-Ability to view all registered users and their selected events/courses
-Admin panel to manage registered users and events/courses
+Ability to view all registered users
+Admin panel to manage registered users
 ## Getting Started
 ### Prerequisites
 To run this bot, you will need to have the following:
